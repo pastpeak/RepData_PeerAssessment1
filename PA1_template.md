@@ -5,10 +5,7 @@ date: "February 5, 2016"
 output: html_document
 ---
 
-```{r, echo=FALSE}
-library(knitr)
-opts_chunk$set('echo = TRUE')
-```
+
 
 ###Introduction
 
@@ -33,29 +30,58 @@ The dataset is stored in a comma-separated-value (CSV) file and there are a tota
 
 Your working directory may differ.
 
-```{r}
+
+```r
 setwd('C:/Courses/Coursera/Data Science (Hopkins)/DS5 Reproducible Research/Projects/Project 1')
 activity_data <- read.csv('activity.csv')
 ```
 
 How many missing values are present?
 
-```{r}
+
+```r
 missing <- is.na(activity_data$steps)
 mean(missing) # 0.1311475, i.e., 13.1%
 ```
 
+```
+## [1] 0.1311475
+```
+
 There are no missing values in other columns.
 
-```{r}
+
+```r
 sum(is.na(activity_data$date))
+```
+
+```
+## [1] 0
+```
+
+```r
 sum(is.na(activity_data$interval))
+```
+
+```
+## [1] 0
 ```
 
 What does the data look like?
 
-```{r}
+
+```r
 head(activity_data)
+```
+
+```
+##   steps       date interval
+## 1    NA 2012-10-01        0
+## 2    NA 2012-10-01        5
+## 3    NA 2012-10-01       10
+## 4    NA 2012-10-01       15
+## 5    NA 2012-10-01       20
+## 6    NA 2012-10-01       25
 ```
 
 Data is in a usable form as is, although we'll have to address missing values later.
@@ -67,21 +93,37 @@ For now, we'll ignore the missing values.
 
 Calculate the total number of steps taken per day
 
-```{r}
+
+```r
 steps_per_day <- tapply(activity_data$steps, activity_data$date, sum, rm.na=TRUE)
 ```
 
 Make a histogram of the total number of steps taken each day
 
-```{r}
+
+```r
 hist(steps_per_day, breaks=20, ylim=c(0,20), xlab='Steps per day', main='Histogram of steps per day')
 ```
 
+![plot of chunk unnamed-chunk-7](figure/unnamed-chunk-7-1.png)
+
 Calculate and report the mean and median of the total number of steps taken per day
 
-```{r}
+
+```r
 mean(steps_per_day, na.rm=TRUE)
+```
+
+```
+## [1] 10767.19
+```
+
+```r
 median(steps_per_day, na.rm=TRUE)
+```
+
+```
+## [1] 10766
 ```
 
 
@@ -91,62 +133,89 @@ Make a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and 
 
 First, put the intervals into hh:mm format.
 
-```{r}
+
+```r
 hhmm <- strptime(sprintf("%04d", as.numeric(levels(as.factor(activity_data$interval)))), format="%H%M", tz="EST")
 ```
 
 Now calculate the means and construct the plot.
 
-```{r}
+
+```r
 mean_steps_per_interval <- tapply(activity_data$steps, activity_data$interval, mean, na.rm=TRUE)
 plot(hhmm, mean_steps_per_interval, type='l', xlab='Time of day (hh:mm)', ylab='Average number of steps', main='Average number of steps per 5-minute interval')
 ```
 
+![plot of chunk unnamed-chunk-10](figure/unnamed-chunk-10-1.png)
+
 Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
 
-```{r}
+
+```r
 max_interval <- which(mean_steps_per_interval == max(mean_steps_per_interval))
 max_mean <- mean_steps_per_interval[max_interval]
 max_interval_time <- strftime(hhmm[max_interval], format="%R")
 ```
 
-The max interval is the 5-minute interval starting at **`r max_interval_time`** with an average number of steps = **`r round(max_mean, digits=2)`**.
+The max interval is the 5-minute interval starting at **08:35** with an average number of steps = **206.17**.
 
 
 ###Imputing missing values
 
 Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs).
 
-```{r}
+
+```r
 sum(is.na(activity_data$steps))
+```
+
+```
+## [1] 2304
 ```
 
 We saw earlier that *steps* is the only column with missing values.
 
 To impute the missing values, we will replace NAs in the original dataset with the mean for the interval in which the NA appears.
 
-```{r}
+
+```r
 activity_data_imputed <- activity_data
 activity_data_imputed[missing,"steps"] <- mean_steps_per_interval[as.character(activity_data_imputed[missing,"interval"])]
 ```
 
 Create a new dataset that is equal to the original dataset but with the missing data filled in.
 
-```{r}
+
+```r
 imputed_steps_per_day <- tapply(activity_data_imputed$steps, activity_data_imputed$date, sum, rm.na=TRUE)
 ```
 
 Make a histogram of the total number of steps taken each day.
 
-```{r}
+
+```r
 hist(imputed_steps_per_day, breaks=20, ylim=c(0,20), xlab='Steps per day', main='Histogram of steps per day with NAs imputed')
 ```
 
+![plot of chunk unnamed-chunk-15](figure/unnamed-chunk-15-1.png)
+
 Calculate and report the mean and median total number of steps taken per day.
 
-```{r}
+
+```r
 mean(imputed_steps_per_day)
+```
+
+```
+## [1] 10767.19
+```
+
+```r
 median(imputed_steps_per_day)
+```
+
+```
+## [1] 10767.19
 ```
 
 
@@ -163,7 +232,8 @@ We continue to use the dataset with missing values imputed.
 
 Create a new factor variable in the dataset with two levels - "weekday" and "weekend" indicating whether a given date is a weekday or weekend day.
 
-```{r}
+
+```r
 wd <- weekdays(as.Date(as.character(activity_data_imputed$date)))
 wd2 <- sapply(wd, function(x) { if (x %in% c('Saturday', 'Sunday')) 'weekend' else 'weekday'})
 activity_data_imputed$wdf <- as.factor(wd2)
@@ -173,7 +243,8 @@ Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minut
 
 First, we split the data into two sets, one for weekdays and one for weekends, calculate their respective means, then combine the results into a single data frame for plotting.
 
-```{r}
+
+```r
 split_data <- split(activity_data_imputed, activity_data_imputed$wdf)
 mean_steps_per_interval_split <- lapply(split_data, function(x) tapply(x$steps, x$interval, mean)) 
 df1 <- data.frame(hhmm, mean_steps_per_interval_split[[1]], 'weekday')
@@ -185,13 +256,31 @@ df_combined <- rbind(df1, df2)
 
 And now, the plot.
 
-```{r}
-str(df_combined)
 
+```r
+str(df_combined)
+```
+
+```
+## 'data.frame':	576 obs. of  3 variables:
+##  $ interval: POSIXct, format: "2016-02-06 00:00:00" "2016-02-06 00:05:00" ...
+##  $ steps   : Named num  2.251 0.445 0.173 0.198 0.099 ...
+##   ..- attr(*, "names")= chr  "0" "5" "10" "15" ...
+##  $ wdf     : Factor w/ 2 levels "weekday","weekend": 1 1 1 1 1 1 1 1 1 1 ...
+```
+
+```r
 library(ggplot2)
 library(scales)
 xlim <- as.POSIXct(c("2016-02-06 00:00", "2016-02-07 00:00"), format="%Y-%m-%d %H:%M", tz = "EST")
 xlim
+```
+
+```
+## [1] "2016-02-06 EST" "2016-02-07 EST"
+```
+
+```r
 ggplot(df_combined, aes(interval, steps, group=wdf)) + geom_line() + facet_grid(wdf ~ .) + 
     xlab('Time of day (hh:mm)') + ylab('Average number of steps') +
     ggtitle("Average Number of Steps Per 5-Minute Interval: Weekdays v. Weekend") +
@@ -199,5 +288,6 @@ ggplot(df_combined, aes(interval, steps, group=wdf)) + geom_line() + facet_grid(
     theme(strip.text.x = element_text(size=8, angle=75),
           strip.text.y = element_text(size=12, face="bold"),
           strip.background = element_rect(colour="red", fill="#CCCCFF"))
-
 ```
+
+![plot of chunk unnamed-chunk-19](figure/unnamed-chunk-19-1.png)
