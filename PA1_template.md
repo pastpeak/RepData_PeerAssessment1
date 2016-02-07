@@ -258,33 +258,13 @@ And now, the plot.
 
 
 ```r
-str(df_combined)
-```
-
-```
-## 'data.frame':	576 obs. of  3 variables:
-##  $ interval: POSIXct, format: "2016-02-06 00:00:00" "2016-02-06 00:05:00" ...
-##  $ steps   : Named num  2.251 0.445 0.173 0.198 0.099 ...
-##   ..- attr(*, "names")= chr  "0" "5" "10" "15" ...
-##  $ wdf     : Factor w/ 2 levels "weekday","weekend": 1 1 1 1 1 1 1 1 1 1 ...
-```
-
-```r
 library(ggplot2)
 library(scales)
 xlim <- as.POSIXct(c("2016-02-06 00:00", "2016-02-07 00:00"), format="%Y-%m-%d %H:%M", tz = "EST")
-xlim
-```
-
-```
-## [1] "2016-02-06 EST" "2016-02-07 EST"
-```
-
-```r
 ggplot(df_combined, aes(interval, steps, group=wdf)) + geom_line() + facet_grid(wdf ~ .) + 
     xlab('Time of day (hh:mm)') + ylab('Average number of steps') +
     ggtitle("Average Number of Steps Per 5-Minute Interval: Weekdays v. Weekend") +
-    scale_x_datetime(labels = date_format("%H:%M",tz="EST"), breaks = date_breaks("2 hour"), limits=xlim) +
+    scale_x_datetime(labels = date_format("%H:%M",tz="EST"), breaks = date_breaks("4 hour"), limits=xlim) +
     theme(strip.text.x = element_text(size=8, angle=75),
           strip.text.y = element_text(size=12, face="bold"),
           strip.background = element_rect(colour="red", fill="#CCCCFF"))
